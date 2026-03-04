@@ -41,7 +41,8 @@ def load_data(symbol:str,year,month):
     '''
     I had to use int() to avoid the format error for date that 
     theowed me '''
-    df=dp.data(symbol, start=f'{year}-{month:02d}-01')
+    df=dp.read_csv(f'{symbol}.csv', index_col='Fecha') 
+    df=df.loc[f'{year}-{month:02d}-01':]
     if df is None or df.empty:
         return go.Figure()
     
@@ -103,29 +104,8 @@ app.layout = html.Div(
         dcc.Dropdown(
             id="symbol",
             options=[
-                {"label": "Pampa", "value": "PAMP.BA"},
-                {"label": "Aluar", "value": "ALUA.BA"},
-                {"label": "IRSA", "value": "IRSA.BA"},
-                {"label": "YPFD", "value": "YPFD.BA"},
-                {"label": "Cresud", "value": "CRES.BA"},
-                {"label": "Comercial", "value": "COME.BA"},
-                {"label": "Cepu", "value": "CEPU.BA"},
-                {"label": "BYMA", "value": "BYMA.BA"},
-                {"label": "Macro", "value": "BMA.BA"},
-                {"label": "Bco. Frances", "value": "BBAR.BA"},
-                {"label": "Mirgor", "value": "MIRG.BA"},
-                {"label": "Metrogas", "value": "METR.BA"},
-                {"label": "Loma Negra", "value": "LOMA.BA"},
-                {"label": "Galicia", "value": "GGAL.BA"},
-                {"label": "Edenror", "value": "EDN.BA"},
-                {"label": "Valo", "value": "VALO.BA"},
-                {"label": "Ternium", "value": "TXAR.BA"},
-                {"label": "Transener", "value": "TRAN.BA"},
-                {"label": "TGSU", "value": "TGSU2.BA"},
-                {"label": "TGNO", "value": "TGNO4.BA"},
-                {"label": "Telecom", "value": "TECO2.BA"},
-                {"label": "Supervill", "value": "SUPV.BA"},
-
+                {"label": "Aluar", "value": "ALUA"},
+                {"label": "YPFD", "value": "YPF"},
             ],
             value="ALUA.BA",
             clearable=False,
@@ -345,5 +325,6 @@ def update_chart(symbol,year,month):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
 
