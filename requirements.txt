@@ -5,6 +5,7 @@ gunicorn
 openpyxl
 numpy
 pandas_ta
-yfinance==0.2.2
+yfinance
+
 
 
