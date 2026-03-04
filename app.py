@@ -91,7 +91,7 @@ def load_data(symbol:str,year,month):
 # Dash App
 # -----------------------------
 app = dash.Dash(__name__)
-
+server = app.server
 app.title = "PANDAS-TA-Lib Momentum & Overlap Dashboard"
 
 app.layout = html.Div(
@@ -343,5 +343,7 @@ def update_chart(symbol,year,month):
     return fig
 
 
-server = app.server
+if __name__ == "__main__":
+    app.run_server(debug=True)
+
 
