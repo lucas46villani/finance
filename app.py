@@ -1,7 +1,6 @@
 # Technicall Finance Analysis
 
-#%% libraries
-import talib  #Finance Library
+import pandas_ta as ta
 import yfinance as  yf
 import Descarga_Precios as dp
 import dash
@@ -62,14 +61,28 @@ def load_data(symbol:str,year,month):
 
 
     # Overlap Indicators
-    df["SMA_20"] = talib.SMA(close, timeperiod=20)
-    df["EMA_20"] = talib.EMA(close, timeperiod=20)
-    df["BB_UPPER"], df["BB_MIDDLE"], df["BB_LOWER"] = talib.BBANDS(close)
+    df["SMA_20"] = ta.sma(close, timeperiod=20)
+    df["EMA_20"] = ta.ema(close, timeperiod=20)
+    bb = ta.bbands(df["Close"], length=20)
+    df["BB_UPPER"] = bb["BBU_20_2.0"]
+    df["BB_MIDDLE"] = bb["BBM_20_2.0"]
+    df["BB_LOWER"] = bb["BBL_20_2.0"]
+
 
     # Momentum Indicators
-    df["RSI"] = talib.RSI(close, timeperiod=14)
-    df["MACD"], df["MACD_SIGNAL"], df["MACD_HIST"] = talib.MACD(close)
-    df["STO_K"], df["STO_D"] = talib.STOCH(high, low, close)
+    'RSI'
+    df["RSI"] = ta.rsi(df["Close"], length=14)
+    
+    'MACD'
+    macd = ta.macd(df["Close"])
+    df["MACD"] = macd["MACD_12_26_9"]
+    df["MACD_SIGNAL"] = macd["MACDs_12_26_9"]
+    df["MACD_HIST"] = macd["MACDh_12_26_9"]
+    
+    'STHOCASTIC'
+    stoch = ta.stoch(df["High"], df["Low"], df["Close"])
+    df["STO_K"] = stoch["STOCHk_14_3_3"]
+    df["STO_D"] = stoch["STOCHd_14_3_3"]
 
     return df
 
@@ -78,7 +91,8 @@ def load_data(symbol:str,year,month):
 # Dash App
 # -----------------------------
 app = dash.Dash(__name__)
-app.title = "TA-Lib Momentum & Overlap Dashboard"
+
+app.title = "PANDAS-TA-Lib Momentum & Overlap Dashboard"
 
 app.layout = html.Div(
     style={"padding": "20px", "backgroundColor": "black", "color": "white"},
@@ -164,7 +178,7 @@ def update_chart(symbol,year,month):
     fig = make_subplots(
         rows=5,
         cols=1,
-        shared_xaxes=True,
+        shared_xaxes=False,
         row_heights=[0.55, 0.25, 0.2, 0.25, 0.25],
         vertical_spacing=0.06,
         subplot_titles=("BOLLINGER", "RSI", "MACD", "HISTOGRAMA","RACHAS"),
@@ -329,11 +343,5 @@ def update_chart(symbol,year,month):
     return fig
 
 
-# -----------------------------
-# Run Server
-# -----------------------------
-if __name__ == "__main__":
-    app.run(debug=True, port=8050)
+server = app.server
 
-
-# %%
