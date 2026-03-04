@@ -41,7 +41,7 @@ def load_data(symbol:str,year,month):
     '''
     I had to use int() to avoid the format error for date that 
     theowed me '''
-    df=dp.read_csv(f'{symbol}.csv', index_col='Fecha') 
+    df=pd.read_csv(f'{symbol}.csv', index_col='Fecha') 
     df=df.loc[f'{year}-{month:02d}-01':]
     if df is None or df.empty:
         return go.Figure()
@@ -325,6 +325,7 @@ def update_chart(symbol,year,month):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
 
 
