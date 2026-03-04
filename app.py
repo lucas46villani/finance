@@ -51,7 +51,7 @@ def load_data(symbol:str,year,month):
     #    df.dropna(axis=1,how ='all', inplace=True) #Give us the columns whose all elements are NaN#Give us the columns whose all elements are NaN
     #else:
     #    pass
-    df=df.xs(symbol, level=1, axis=1).copy()
+    #df=df.xs(symbol, level=1, axis=1).copy()
     'Drop rows with any NaN values'
     #df.dropna(inplace=True)
     
@@ -325,6 +325,7 @@ def update_chart(symbol,year,month):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
 
 
