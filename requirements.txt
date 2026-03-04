@@ -4,3 +4,4 @@ plotly
 gunicorn
 openpyxl
 numpy
+ta-lib
