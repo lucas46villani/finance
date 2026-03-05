@@ -41,7 +41,8 @@ def load_data(symbol:str,year,month):
     '''
     I had to use int() to avoid the format error for date that 
     theowed me '''
-    df=pd.read_csv(f'{symbol}.csv', index_col='Fecha') 
+    df=pd.read_csv(f'{symbol}.csv', index_col='Fecha')
+    df.index=pd.to_datetime(df.index)
     df=df.loc[f'{year}-{month:02d}-01':]
     if df is None or df.empty:
         return go.Figure()
@@ -107,7 +108,7 @@ app.layout = html.Div(
                 {"label": "Aluar", "value": "ALUA"},
                 {"label": "YPFD", "value": "YPF"},
             ],
-            value="ALUA.BA",
+            value="ALUA",
             clearable=False,
         style={'width':'150px', 'backgroundColor': 'black', 'color': 'yellow'}),
 
@@ -325,6 +326,7 @@ def update_chart(symbol,year,month):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
 
 
