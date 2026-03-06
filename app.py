@@ -155,8 +155,15 @@ app.layout = html.Div(
 )
 
 def update_chart(symbol,year,month):
+
     try:
+
         df = load_data(symbol,year,month)
+
+        if df is None or df.empty:
+            print("DataFrame vacío")
+            return go.Figure()
+
         fig = make_subplots(
             rows=5,
             cols=1,
@@ -165,7 +172,7 @@ def update_chart(symbol,year,month):
             vertical_spacing=0.06,
             subplot_titles=("BOLLINGER", "RSI", "MACD", "HISTOGRAMA","RACHAS"),
         )
-    
+
         # ---- Candlestick ----
         fig.add_trace(
             go.Candlestick(
@@ -179,11 +186,21 @@ def update_chart(symbol,year,month):
             row=1,
             col=1,
         )
-    
-        # ---- Overlap Indicators ----
-        fig.add_trace(go.Scatter(x=df.index, y=df["SMA_20"], name="SMA 20"), row=1, col=1)
-        fig.add_trace(go.Scatter(x=df.index, y=df["EMA_20"], name="EMA 20"), row=1, col=1)
-    
+
+        # ---- Moving averages ----
+        fig.add_trace(
+            go.Scatter(x=df.index, y=df["SMA_20"], name="SMA 20"),
+            row=1,
+            col=1,
+        )
+
+        fig.add_trace(
+            go.Scatter(x=df.index, y=df["EMA_20"], name="EMA 20"),
+            row=1,
+            col=1,
+        )
+
+        # ---- Bollinger ----
         fig.add_trace(
             go.Scatter(
                 x=df.index,
@@ -194,6 +211,7 @@ def update_chart(symbol,year,month):
             row=1,
             col=1,
         )
+
         fig.add_trace(
             go.Scatter(
                 x=df.index,
@@ -204,24 +222,41 @@ def update_chart(symbol,year,month):
             row=1,
             col=1,
         )
-    
+
         # ---- RSI ----
-        fig.add_trace(go.Scatter(x=df.index, y=df["RSI"], name="RSI"), row=2, col=1)
+        fig.add_trace(
+            go.Scatter(x=df.index, y=df["RSI"], name="RSI"),
+            row=2,
+            col=1,
+        )
+
         fig.add_hline(y=70, line_dash="dash", row=2, col=1)
         fig.add_hline(y=30, line_dash="dash", row=2, col=1)
-    
+
         # ---- MACD ----
-        fig.add_trace(go.Scatter(x=df.index, y=df["MACD"], name="MACD"), row=3, col=1)
         fig.add_trace(
-            go.Scatter(x=df.index, y=df["MACD_SIGNAL"], name="Signal"), row=3, col=1
+            go.Scatter(x=df.index, y=df["MACD"], name="MACD"),
+            row=3,
+            col=1,
         )
+
         fig.add_trace(
-            go.Bar(x=df.index, y=df["MACD_HIST"], name="Histogram"), row=3, col=1
+            go.Scatter(x=df.index, y=df["MACD_SIGNAL"], name="Signal"),
+            row=3,
+            col=1,
         )
-    
-        # ---- HISTO ----
+
+        fig.add_trace(
+            go.Bar(x=df.index, y=df["MACD_HIST"], name="Histogram"),
+            row=3,
+            col=1,
+        )
+
+        # ---- HISTOGRAMA VARIACIONES ----
         vp_20 = df['Close'].pct_change(periods=20).dropna()
+
         if not vp_20.empty:
+
             fig.add_trace(
                 go.Histogram(
                     x=vp_20,
@@ -234,13 +269,9 @@ def update_chart(symbol,year,month):
                 row=4,
                 col=1,
             )
-    
-            # Add a vertical line at the last vp_20 value for reference
-            try:
-                last_vp = float(vp_20.iloc[-1])
-            except Exception:
-                last_vp = float(vp_20.values[-1])
-    
+
+            last_vp = float(vp_20.iloc[-1])
+
             fig.add_vline(
                 x=last_vp,
                 row=4,
@@ -250,19 +281,19 @@ def update_chart(symbol,year,month):
                 annotation_font=dict(color='red'),
                 annotation_position='top right',
             )
-            # Estadísticas para mostrar en la esquina superior derecha del histograma
+
             mean_v = vp_20.mean()
             std_v = vp_20.std()
-            kurt_v = vp_20.kurtosis()  #It give us the excess kurtosis not the kurtosis
+            kurt_v = vp_20.kurtosis()
             skew_v = vp_20.skew()
-    
+
             stats_text = (
-                f"Media: {mean_v:.2%}" + "<br>"
-                + f"Desv: {std_v:.2%}" + "<br>"
-                + f"Curtosis: {kurt_v:.2f}" + "<br>"
-                + f"Asimetría: {skew_v:.2f}"
+                f"Media: {mean_v:.2%}<br>"
+                f"Desv: {std_v:.2%}<br>"
+                f"Curtosis: {kurt_v:.2f}<br>"
+                f"Asimetría: {skew_v:.2f}"
             )
-    
+
             fig.add_annotation(
                 x=0.98,
                 y=0.14,
@@ -276,28 +307,29 @@ def update_chart(symbol,year,month):
                 bordercolor='white',
                 borderwidth=0.5,
             )
-    
-                # ---- Rachas Negativas ----
-        #Genero las Rachas Negativas
-        rachas_negativas=contar_rachas_negativas(df['Close'].pct_change().dropna().values)
-    
-        if len(rachas_negativas)>0:
+
+        # ---- RACHAS NEGATIVAS ----
+        rachas_negativas = contar_rachas_negativas(
+            df['Close'].pct_change().dropna().values
+        )
+
+        if len(rachas_negativas) > 0:
+
             fig.add_trace(
                 go.Histogram(
                     x=rachas_negativas,
                     nbinsx=50,
                     histnorm='probability density',
-                    name='Var %',
+                    name='Rachas negativas',
                     marker=dict(color='#008B8B', line=dict(color='white', width=0.5)),
                     opacity=0.85,
                 ),
                 row=5,
                 col=1,
             )
-    
-            # Add a vertical line at the last vp_20 value for reference
-            last_racha =rachas_negativas[-1]
-    
+
+            last_racha = rachas_negativas[-1]
+
             fig.add_vline(
                 x=last_racha,
                 row=5,
@@ -307,8 +339,8 @@ def update_chart(symbol,year,month):
                 annotation_font=dict(color='red'),
                 annotation_position='top right',
             )
-    
-    
+
+        # ---- Layout ----
         fig.update_layout(
             height=900,
             xaxis_rangeslider_visible=False,
@@ -317,20 +349,20 @@ def update_chart(symbol,year,month):
             font=dict(color='white'),
             legend=dict(orientation='h', font=dict(color='white')),
         )
-    
-        # Make axis labels and gridlines visible on dark background
+
         fig.update_xaxes(color='white', showgrid=False)
         fig.update_yaxes(color='white', gridcolor='gray')
-    
+
         return fig
-    
-    except Exception as e:
-        print("ERROR:", e)
+
+    except Exception:
+        print(traceback.format_exc())
         return go.Figure()
 
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
 
 
