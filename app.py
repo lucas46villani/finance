@@ -44,8 +44,9 @@ def load_data(symbol:str,year,month):
     df=pd.read_csv(f'{symbol}.csv', index_col='Fecha')
     df.index=pd.to_datetime(df.index)
     df=df.loc[f'{year}-{month:02d}-01':]
+
     if df is None or df.empty:
-        return go.Figure()
+        return None   #go.Figure()
     
     'Check if there are columns with all the elements NaN. it it is so, drop them'
     #if df.columns[df.isna().all()].shape[0]!=0:
@@ -362,6 +363,7 @@ def update_chart(symbol,year,month):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
 
 
