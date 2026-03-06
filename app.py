@@ -155,177 +155,183 @@ app.layout = html.Div(
 )
 
 def update_chart(symbol,year,month):
-    df = load_data(symbol,year,month)
-    fig = make_subplots(
-        rows=5,
-        cols=1,
-        shared_xaxes=False,
-        row_heights=[0.55, 0.25, 0.2, 0.25, 0.25],
-        vertical_spacing=0.06,
-        subplot_titles=("BOLLINGER", "RSI", "MACD", "HISTOGRAMA","RACHAS"),
-    )
-
-    # ---- Candlestick ----
-    fig.add_trace(
-        go.Candlestick(
-            x=df.index,
-            open=df["Open"],
-            high=df["High"],
-            low=df["Low"],
-            close=df["Close"],
-            name="Price",
-        ),
-        row=1,
-        col=1,
-    )
-
-    # ---- Overlap Indicators ----
-    fig.add_trace(go.Scatter(x=df.index, y=df["SMA_20"], name="SMA 20"), row=1, col=1)
-    fig.add_trace(go.Scatter(x=df.index, y=df["EMA_20"], name="EMA 20"), row=1, col=1)
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=df["BB_UPPER"],
-            name="BB Upper",
-            line=dict(dash="dot"),
-        ),
-        row=1,
-        col=1,
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=df["BB_LOWER"],
-            name="BB Lower",
-            line=dict(dash="dot"),
-        ),
-        row=1,
-        col=1,
-    )
-
-    # ---- RSI ----
-    fig.add_trace(go.Scatter(x=df.index, y=df["RSI"], name="RSI"), row=2, col=1)
-    fig.add_hline(y=70, line_dash="dash", row=2, col=1)
-    fig.add_hline(y=30, line_dash="dash", row=2, col=1)
-
-    # ---- MACD ----
-    fig.add_trace(go.Scatter(x=df.index, y=df["MACD"], name="MACD"), row=3, col=1)
-    fig.add_trace(
-        go.Scatter(x=df.index, y=df["MACD_SIGNAL"], name="Signal"), row=3, col=1
-    )
-    fig.add_trace(
-        go.Bar(x=df.index, y=df["MACD_HIST"], name="Histogram"), row=3, col=1
-    )
-
-    # ---- HISTO ----
-    vp_20 = df['Close'].pct_change(periods=20).dropna()
-    if not vp_20.empty:
+    try:
+        df = load_data(symbol,year,month)
+        fig = make_subplots(
+            rows=5,
+            cols=1,
+            shared_xaxes=False,
+            row_heights=[0.55, 0.25, 0.2, 0.25, 0.25],
+            vertical_spacing=0.06,
+            subplot_titles=("BOLLINGER", "RSI", "MACD", "HISTOGRAMA","RACHAS"),
+        )
+    
+        # ---- Candlestick ----
         fig.add_trace(
-            go.Histogram(
-                x=vp_20,
-                nbinsx=50,
-                histnorm='probability density',
-                name='Var %',
-                marker=dict(color='#8A2BE2', line=dict(color='white', width=0.5)),
-                opacity=0.85,
+            go.Candlestick(
+                x=df.index,
+                open=df["Open"],
+                high=df["High"],
+                low=df["Low"],
+                close=df["Close"],
+                name="Price",
             ),
-            row=4,
+            row=1,
             col=1,
         )
-
-        # Add a vertical line at the last vp_20 value for reference
-        try:
-            last_vp = float(vp_20.iloc[-1])
-        except Exception:
-            last_vp = float(vp_20.values[-1])
-
-        fig.add_vline(
-            x=last_vp,
-            row=4,
-            col=1,
-            line=dict(color='red', dash='dash'),
-            annotation_text=f"Último: {last_vp:.2%}",
-            annotation_font=dict(color='red'),
-            annotation_position='top right',
-        )
-        # Estadísticas para mostrar en la esquina superior derecha del histograma
-        mean_v = vp_20.mean()
-        std_v = vp_20.std()
-        kurt_v = vp_20.kurtosis()  #It give us the excess kurtosis not the kurtosis
-        skew_v = vp_20.skew()
-
-        stats_text = (
-            f"Media: {mean_v:.2%}" + "<br>"
-            + f"Desv: {std_v:.2%}" + "<br>"
-            + f"Curtosis: {kurt_v:.2f}" + "<br>"
-            + f"Asimetría: {skew_v:.2f}"
-        )
-
-        fig.add_annotation(
-            x=0.98,
-            y=0.14,
-            xref='paper',
-            yref='paper',
-            text=stats_text,
-            showarrow=False,
-            align='right',
-            font=dict(color='white', size=11),
-            bgcolor='rgba(20,20,20,0.6)',
-            bordercolor='white',
-            borderwidth=0.5,
-        )
-
-            # ---- Rachas Negativas ----
-    #Genero las Rachas Negativas
-    rachas_negativas=contar_rachas_negativas(df['Close'].pct_change().dropna().values)
-
-    if len(rachas_negativas)>0:
+    
+        # ---- Overlap Indicators ----
+        fig.add_trace(go.Scatter(x=df.index, y=df["SMA_20"], name="SMA 20"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df["EMA_20"], name="EMA 20"), row=1, col=1)
+    
         fig.add_trace(
-            go.Histogram(
-                x=rachas_negativas,
-                nbinsx=50,
-                histnorm='probability density',
-                name='Var %',
-                marker=dict(color='#008B8B', line=dict(color='white', width=0.5)),
-                opacity=0.85,
+            go.Scatter(
+                x=df.index,
+                y=df["BB_UPPER"],
+                name="BB Upper",
+                line=dict(dash="dot"),
             ),
-            row=5,
+            row=1,
             col=1,
         )
-
-        # Add a vertical line at the last vp_20 value for reference
-        last_racha =rachas_negativas[-1]
-
-        fig.add_vline(
-            x=last_racha,
-            row=5,
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df["BB_LOWER"],
+                name="BB Lower",
+                line=dict(dash="dot"),
+            ),
+            row=1,
             col=1,
-            line=dict(color='red', dash='dash'),
-            annotation_text=f"Último: {last_racha}",
-            annotation_font=dict(color='red'),
-            annotation_position='top right',
         )
-
-
-    fig.update_layout(
-        height=900,
-        xaxis_rangeslider_visible=False,
-        paper_bgcolor='black',
-        plot_bgcolor='black',
-        font=dict(color='white'),
-        legend=dict(orientation='h', font=dict(color='white')),
-    )
-
-    # Make axis labels and gridlines visible on dark background
-    fig.update_xaxes(color='white', showgrid=False)
-    fig.update_yaxes(color='white', gridcolor='gray')
-
-    return fig
+    
+        # ---- RSI ----
+        fig.add_trace(go.Scatter(x=df.index, y=df["RSI"], name="RSI"), row=2, col=1)
+        fig.add_hline(y=70, line_dash="dash", row=2, col=1)
+        fig.add_hline(y=30, line_dash="dash", row=2, col=1)
+    
+        # ---- MACD ----
+        fig.add_trace(go.Scatter(x=df.index, y=df["MACD"], name="MACD"), row=3, col=1)
+        fig.add_trace(
+            go.Scatter(x=df.index, y=df["MACD_SIGNAL"], name="Signal"), row=3, col=1
+        )
+        fig.add_trace(
+            go.Bar(x=df.index, y=df["MACD_HIST"], name="Histogram"), row=3, col=1
+        )
+    
+        # ---- HISTO ----
+        vp_20 = df['Close'].pct_change(periods=20).dropna()
+        if not vp_20.empty:
+            fig.add_trace(
+                go.Histogram(
+                    x=vp_20,
+                    nbinsx=50,
+                    histnorm='probability density',
+                    name='Var %',
+                    marker=dict(color='#8A2BE2', line=dict(color='white', width=0.5)),
+                    opacity=0.85,
+                ),
+                row=4,
+                col=1,
+            )
+    
+            # Add a vertical line at the last vp_20 value for reference
+            try:
+                last_vp = float(vp_20.iloc[-1])
+            except Exception:
+                last_vp = float(vp_20.values[-1])
+    
+            fig.add_vline(
+                x=last_vp,
+                row=4,
+                col=1,
+                line=dict(color='red', dash='dash'),
+                annotation_text=f"Último: {last_vp:.2%}",
+                annotation_font=dict(color='red'),
+                annotation_position='top right',
+            )
+            # Estadísticas para mostrar en la esquina superior derecha del histograma
+            mean_v = vp_20.mean()
+            std_v = vp_20.std()
+            kurt_v = vp_20.kurtosis()  #It give us the excess kurtosis not the kurtosis
+            skew_v = vp_20.skew()
+    
+            stats_text = (
+                f"Media: {mean_v:.2%}" + "<br>"
+                + f"Desv: {std_v:.2%}" + "<br>"
+                + f"Curtosis: {kurt_v:.2f}" + "<br>"
+                + f"Asimetría: {skew_v:.2f}"
+            )
+    
+            fig.add_annotation(
+                x=0.98,
+                y=0.14,
+                xref='paper',
+                yref='paper',
+                text=stats_text,
+                showarrow=False,
+                align='right',
+                font=dict(color='white', size=11),
+                bgcolor='rgba(20,20,20,0.6)',
+                bordercolor='white',
+                borderwidth=0.5,
+            )
+    
+                # ---- Rachas Negativas ----
+        #Genero las Rachas Negativas
+        rachas_negativas=contar_rachas_negativas(df['Close'].pct_change().dropna().values)
+    
+        if len(rachas_negativas)>0:
+            fig.add_trace(
+                go.Histogram(
+                    x=rachas_negativas,
+                    nbinsx=50,
+                    histnorm='probability density',
+                    name='Var %',
+                    marker=dict(color='#008B8B', line=dict(color='white', width=0.5)),
+                    opacity=0.85,
+                ),
+                row=5,
+                col=1,
+            )
+    
+            # Add a vertical line at the last vp_20 value for reference
+            last_racha =rachas_negativas[-1]
+    
+            fig.add_vline(
+                x=last_racha,
+                row=5,
+                col=1,
+                line=dict(color='red', dash='dash'),
+                annotation_text=f"Último: {last_racha}",
+                annotation_font=dict(color='red'),
+                annotation_position='top right',
+            )
+    
+    
+        fig.update_layout(
+            height=900,
+            xaxis_rangeslider_visible=False,
+            paper_bgcolor='black',
+            plot_bgcolor='black',
+            font=dict(color='white'),
+            legend=dict(orientation='h', font=dict(color='white')),
+        )
+    
+        # Make axis labels and gridlines visible on dark background
+        fig.update_xaxes(color='white', showgrid=False)
+        fig.update_yaxes(color='white', gridcolor='gray')
+    
+        return fig
+    
+    except Exception as e:
+        print("ERROR:", e)
+        return go.Figure()
 
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
 
 
