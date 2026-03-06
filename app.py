@@ -1,4 +1,6 @@
-# Technicall Finance Analysis
+# -----------------------------
+# Libraries
+# -----------------------------
 
 import pandas_ta as ta
 import yfinance as  yf
@@ -12,23 +14,6 @@ from plotly.subplots import make_subplots
 import datetime as dt
 
 
-#%% DASH
-def contar_rachas_negativas(serie):
-    contador = 0
-    rachas = []
-
-    for valor in serie:
-        if valor < 0:
-            contador += 1
-        else:
-            if contador > 0:
-                rachas.append(contador)
-                contador = 0
-
-    # por si la serie termina en negativo
-    if contador > 0:
-        rachas.append(contador)
-    return rachas
 
 
 
@@ -89,6 +74,29 @@ def load_data(symbol:str,year,month):
 
     return df
 
+# -----------------------------
+# Calculo de Rachas
+# -----------------------------
+def contar_rachas_negativas(serie):
+    contador = 0
+    rachas = []
+
+    for valor in serie:
+        if valor < 0:
+            contador += 1
+        else:
+            if contador > 0:
+                rachas.append(contador)
+                contador = 0
+
+    # por si la serie termina en negativo
+    if contador > 0:
+        rachas.append(contador)
+    return rachas
+
+
+
+
 
 # -----------------------------
 # Dash App
@@ -111,7 +119,7 @@ app.layout = html.Div(
             ],
             value="ALUA",
             clearable=False,
-        style={'width':'150px', 'backgroundColor': 'black', 'color': 'yellow'}),
+        style={'width':'150px', 'backgroundColor': 'black', 'color': 'black'}),
 
         html.Div(
             style={'display':'flex', 'gap':'10px'},
